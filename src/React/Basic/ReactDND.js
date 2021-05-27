@@ -4,33 +4,67 @@ const DND = require("react-dnd");
 
 exports.dndProvider_ = DND.DndProvider;
 
+exports.useDragLayer_ = () => {
+  const {
+    item,
+    itemType,
+    currentOffset,
+    clientOffset,
+    initialOffset,
+    isDragging,
+  } = DND.useDragLayer((monitor) => ({
+    item: monitor.getItem(),
+    itemType: monitor.getItemType(),
+    currentOffset: monitor.getSourceClientOffset(),
+    clientOffset: monitor.getClientOffset(),
+    initialOffset: monitor.getInitialSourceClientOffset(),
+    isDragging: monitor.isDragging(),
+  }));
+
+  const info =
+    item && itemType && currentOffset && clientOffset && initialOffset
+      ? { item, itemType, currentOffset, clientOffset, initialOffset }
+      : null;
+  return { info, isDragging };
+};
+
 exports.useDrag_ = (options) => {
-  const [{ isDragging }, connectDrag] = DND.useDrag({
-    item: options.item,
+  const [{ isDragging }, connectDrag, preview] = DND.useDrag({
+    type: options.type,
+    item: () => {
+      if (options.item != null && options.item.id != null) {
+        options.begin(options.item)();
+        return options.item;
+      }
+    },
     collect: (monitor) => {
       const isDragging = monitor.isDragging();
       return { isDragging };
     },
+    end: (item, monitor) => {
+      if (item != null && item.id != null) {
+        options.end(item)();
+      }
+    },
   });
-  return { isDragging, connectDrag };
+  return { isDragging, connectDrag, preview };
 };
 
 exports.useDrop_ = (options) => {
-  const [{ id, isOver }, connectDrop] = DND.useDrop({
+  const [{ item, isOver }, connectDrop] = DND.useDrop({
     accept: options.accept,
     drop: (item) => {
       if (item != null && item.id != null) {
-        options.onDrop(item.id)();
+        options.onDrop(item)();
       }
     },
     collect: (monitor) => {
       const item = monitor.getItem();
-      const id = item && item.id;
       const isOver = monitor.isOver();
-      return { id, isOver };
+      return { item, isOver };
     },
   });
-  return { id, isOver, connectDrop };
+  return { item, isOver, connectDrop };
 };
 
 exports.mergeTargets = (ref1) => (ref2) => {

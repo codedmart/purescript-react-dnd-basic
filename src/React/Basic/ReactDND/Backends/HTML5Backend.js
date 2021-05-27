@@ -1,3 +1,7 @@
 "use strict";
 
-exports.html5Backend = require("react-dnd-html5-backend").HTML5Backend;
+var html5Backend = require("react-dnd-html5-backend");
+
+exports.html5Backend = html5Backend.HTML5Backend;
+
+exports.getEmptyImage = html5Backend.getEmptyImage();
